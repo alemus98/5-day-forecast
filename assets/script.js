@@ -10,22 +10,22 @@ var updateCurrentWeather = function(response) {
     var iconEl = $("#icon");
 
 
-    var currentTemp = response.main.temp;
-    var currentHumidity = response.main.humidity;
-    var currentWindSpeed = response.wind.speed;
-    var currentTimeCodeUnix = response.dt;
-    var currentDate = new Date(currentTimeCodeUnix*1000).toLocaleDateString("en-US");
+    var cityTemp = response.main.temp;
+    var cityHumidity = response.main.humidity;
+    var cityWindSpeed = response.wind.speed;
+    var cityTimeCodeUnix = response.dt;
+    var currentDate = new Date(cityTimeCodeUnix*1000).toLocaleDateString("en-US");
     var currentIcon = response.weather[0].icon;
     
 
     dateEl.text(currentDate);
-    tempEl.text(currentTemp);
-    humidityEl.text(currentHumidity);
-    windSpeedEl.text(currentWindSpeed);
+    tempEl.text(cityTemp);
+    humidityEl.text(cityHumidity);
+    windSpeedEl.text(cityWindSpeed);
     iconEl.attr("src", "http://openweathermap.org/img/wn/" + currentIcon + ".png");
 
-    var currentTimeCodeUnix = response.dt;
-    var s = new Date(currentTimeCodeUnix*1000).toLocaleDateString("en-US")
+    var cityTimeCodeUnix = response.dt;
+    var s = new Date(cityTimeCodeUnix*1000).toLocaleDateString("en-US")
 
 
     var locationArr = {
