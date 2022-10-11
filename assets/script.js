@@ -1,72 +1,15 @@
 const apiKey = "5a3f3d652dfaa9c7716468ab35a9130f";
 var userFormEl = $("#citySearch");
 
-var buildSearchHistory = function() {
-    // get search history from local storage
-    var searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
-    if (searchHistory == null) {
-        // if the search history local variable does not exist then generate the left column with common locations
-        searchHistory = ["Los Angeles","Houston","Tokyo","Nashville","Portland","New York","Seattle"];
-        localStorage.setItem("searchHistory",JSON.stringify(searchHistory));
-    }
-    var groupContainer = $(".list-group");
-    groupContainer.html("");
-    for (i in searchHistory) {
-        // generate a list group item for each city in search history
-        var buttonEl = $("<button>")
-            .addClass("list-group-item list-group-item-action")
-            .attr("id", "citySearchList")
-            .attr("type", "button")
-            .text(searchHistory[i]);
-        groupContainer.append(buttonEl);
-    }
-};
-
-
-var updateSearchHistory = function(city) {
-    var searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
-    searchHistory.unshift(city);
-    searchHistory.pop();
-    localStorage.setItem("searchHistory",JSON.stringify(searchHistory));
-
-    // gather all list items
-    var listItems = $(".list-group-item");
-
-    // Update button text
-    for (l in listItems) {
-        // update text of each item
-        listItems[l].textContent = searchHistory[l];
-    };
-}
-
-var getIndex = function(response) {
-    // takes the json response data from the api fetch and returns the index value where the day changes
-    // data is reported every 3 hours
-    var idx = 0
-    for (i=1;i<response.list.length;i++) {
-        var currentTime = new Date(response.list[i].dt*1000);
-        var lastTime = new Date(response.list[i-1].dt*1000);
-        if (currentTime.getDay() != lastTime.getDay()) {
-            if (i == 8) {
-                idx = 0;
-                return idx;
-            } else {
-                idx = i;
-                return idx;
-            };
-        };
-    };
-};
-
 var updateCurrentWeather = function(response) {
-    // grab html elements
-    var dateEl = $("#date");
+
+    var dateEl = $("#todaysDate");
     var tempEl = $("#temp");
     var humidityEl = $("#humidity");
     var windSpeedEl = $("#windSpeed");
     var iconEl = $("#icon");
 
-    // parse desired data from fetch response
+
     var currentTemp = response.main.temp;
     var currentHumidity = response.main.humidity;
     var currentWindSpeed = response.wind.speed;
@@ -74,18 +17,17 @@ var updateCurrentWeather = function(response) {
     var currentDate = new Date(currentTimeCodeUnix*1000).toLocaleDateString("en-US");
     var currentIcon = response.weather[0].icon;
     
-    // assign data to html
+
     dateEl.text(currentDate);
     tempEl.text(currentTemp);
     humidityEl.text(currentHumidity);
     windSpeedEl.text(currentWindSpeed);
-    iconEl.attr("src", "https://openweathermap.org/img/w/" + currentIcon + ".png");
+    iconEl.attr("src", "http://openweathermap.org/img/wn/" + currentIcon + ".png");
 
-    // print data to screen
     var currentTimeCodeUnix = response.dt;
     var s = new Date(currentTimeCodeUnix*1000).toLocaleDateString("en-US")
 
-    // get UV Index using
+
     var locationArr = {
         lat: response.coord.lat,
         long: response.coord.lon
@@ -95,26 +37,17 @@ var updateCurrentWeather = function(response) {
 }; 
 
 var updateUVIndex = function(val) {
-    // get current UV value and style element accordingly
     var uvEl = $("#UV");
     uvEl.text(val);
     uvEl.removeClass();
-
-    if (val < 3) {
-        uvEl.addClass("bg-success text-light p-2 rounded");
-    } else if (val < 6) {
-        uvEl.addClass("bg-warning text-light p-2 rounded");
-    } else {
-        uvEl.addClass("bg-danger text-light p-2 rounded");
     };
-};
 
 var getCurrentWeather = function(cityName) {
     
     var apiUrl = "https://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&units=imperial&appid=" + apiKey;
 
     fetch(apiUrl).then(function(response) {
-        // only continue if valid city data
+
         if (response.ok) {
             response.json().then(function(response) {
                 var cityContainerEl = $("#city");
@@ -141,24 +74,22 @@ var getCurrentWeather = function(cityName) {
 
 var get5DayForecast = function(cityName) {
     var forecastContainerEl = $("#day-forecast");
-    // clear any existing data
+
     forecastContainerEl.html("");
     
     var apiUrl = "https://api.openweathermap.org/data/2.5/forecast?q=" + cityName + "&units=imperial&appid=" + apiKey;
 
     fetch(apiUrl).then(function(response) {
-        // dont need if response ok since already checked earlier
+
         response.json().then(function(response) {
-            // build 
-            // variable to hold index of the first date change
+
             var idx = getIndex(response);
     
             for (i=0;i<5;i++) {
-                // based on the index value above, find the index value for the 5 days (add 4 so the printed data values are for the middle of the day)
+                
                 var actualIdx = i * 8 + idx + 4;
                 if (actualIdx>39) {actualIdx = 39};
     
-                // get data from api at Unix and convert
                 var timeCodeUnix = response.list[actualIdx].dt;
                 var time = new Date(timeCodeUnix*1000).toLocaleDateString("en-US");
                 var icon = response.list[actualIdx].weather[0].icon;
@@ -168,8 +99,8 @@ var get5DayForecast = function(cityName) {
                 var cardEl = $("<div>").addClass("col-2 card bg-primary pt-2");
                 var cardTitleEl = $("<h5>").addClass("card-title").text(time);
                 var divEl = $("<div>").addClass("weather-icon");
-                var cardIconEl = $("<img>").addClass("p-2").attr("src","https://openweathermap.org/img/w/" + icon + ".png");
-                var cardTempEl = $("<p>").addClass("card-text").text("Temp: " + temp + " " + String.fromCharCode(176) + "F");
+                var cardIconEl = $("<img>").addClass("p-2").attr("src","http://openweathermap.org/img/wn/" + icon + ".png");
+                var cardTempEl = $("<p>").addClass("result-text").text("Temp: " + temp + " " + String.fromCharCode(176) + "F");
                 var cardHumidityEl = $("<p>").addClass("card-text mb-2").text("Humidity: " + humidity + "%");
     
                 cardEl.append(cardTitleEl);
@@ -202,6 +133,54 @@ var formSubmitHandler = function(event) {
     }
 
     target.blur();
+};
+
+var buildSearchHistory = function() {
+    var searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
+    if (searchHistory == null) {
+        searchHistory = ["Los Angeles","Houston","Tokyo","Nashville","Portland","New York","Seattle"];
+        localStorage.setItem("searchHistory",JSON.stringify(searchHistory));
+    }
+    var groupContainer = $(".list-group");
+    groupContainer.html("");
+    for (i in searchHistory) {
+        var buttonEl = $("<button>")
+            .addClass("list-group-item list-group-item-action")
+            .attr("id", "citySearchList")
+            .attr("type", "button")
+            .text(searchHistory[i]);
+        groupContainer.append(buttonEl);
+    }
+};
+
+
+var updateSearchHistory = function(city) {
+    var searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
+    searchHistory.unshift(city);
+    searchHistory.pop();
+    localStorage.setItem("searchHistory",JSON.stringify(searchHistory));
+    var listItems = $(".list-group-item");
+    for (l in listItems) {
+        listItems[l].textContent = searchHistory[l];
+    };
+}
+
+var getIndex = function(response) {
+
+    var idx = 0
+    for (i=1;i<response.list.length;i++) {
+        var currentTime = new Date(response.list[i].dt*1000);
+        var lastTime = new Date(response.list[i-1].dt*1000);
+        if (currentTime.getDay() != lastTime.getDay()) {
+            if (i == 8) {
+                idx = 0;
+                return idx;
+            } else {
+                idx = i;
+                return idx;
+            };
+        };
+    };
 };
 
 
